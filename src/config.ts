@@ -1,6 +1,6 @@
 export type Position = [number, number, number];
 export type Atmosphere = 'day' | 'sunset' | 'night';
-export type PlaceId = 'entry' | 'computer' | 'bed' | 'lounge' | 'tea' | 'books' | 'mirror';
+export type PlaceId = 'entry' | 'computer' | 'bed' | 'lounge' | 'tea' | 'books' | 'mirror' | 'windowSeat';
 /** A spot to be in: where the eyes rest, which way they face (yaw 0 looks at the rear wall, negative turns toward the sea), and where the feet land on standing up. */
 export type Place = { eye: Position; yaw: number; pitch: number; stand: Position; seated: boolean };
 
@@ -18,6 +18,8 @@ export const home = {
   library: { width: 7.85, height: 3.08, depth: .42, bays: 7, shelves: [.48, 1.1, 1.74, 2.38] },
   lowerLibrary: { width: 3.95, height: 2.85, depth: .38, bays: 4, shelves: [.45, 1.05, 1.66, 2.25] },
   dresser: { size: [2, 1.5, .66] as Position },
+  // A bench built into the sea window's sill, shallow enough that the drawn curtains fall behind it.
+  windowSeat: { center: [8.68, 0, -.1] as Position, size: [.48, .46, 2.5] as Position },
   bedSize: [3.65, .35, 4.5] as Position,
   // A lowered linen canopy and an open timber screen shelter the bed head; the foot stays in the sun.
   sleepingNook: { left: 2.2, right: 8.05, depth: 2.95, canopyY: 3.5 },
@@ -26,7 +28,8 @@ export const home = {
     gamingChair: [-7.75, 0, 3] as Position,
     bed: [5.1, 0, -3.91] as Position,
     bedsideTable: [7.55, 0, -5.25] as Position,
-    television: [7.75, 0, -.55] as Position,
+    // Drawn up beside the bed rather than past its foot, which would stand it in front of the window seat.
+    television: [7.75, 0, -2.1] as Position,
     televisionParked: [8.3, 0, 4.4] as Position,
     readingChair: [6.9, 0, 2.3] as Position,
     ottoman: [8.05, 0, 1.75] as Position,
@@ -39,6 +42,13 @@ export const home = {
     dresser: [-1.55, 0, -5.76] as Position,
     teaTable: [-3.6, 3.68, -4.5] as Position,
     plant: [8.5, 0, -5.6] as Position,
+    // A wood stove on the left wall, in the stretch between the desk window and the front wall,
+    // with the cat's basket beside it.
+    stove: [-8.62, 0, 4.45] as Position,
+    petBed: [-7.6, 0, 4.72] as Position,
+    pouf: [7.6, 0, 3.4] as Position,
+    // In the open corner between the loft's right edge and the bed alcove, where it can be seen.
+    blanketLadder: [1.25, 0, -5.85] as Position,
   },
   places: {
     entry: { eye: [-1.5, 2.5, 4.35], yaw: -.5, pitch: -.03, stand: [-1.5, 0, 4.35], seated: false },
@@ -49,6 +59,9 @@ export const home = {
     books: { eye: [-5.7, 6.18, -2.8], yaw: -.02, pitch: -.07, stand: [-5.7, 3.68, -2.8], seated: false },
     // Facing the round mirror on the dresser, with the coat and the sun hat from the door to try on.
     mirror: { eye: [-1.93, 2.5, -4.3], yaw: .02, pitch: -.3, stand: [-1.93, 0, -4.3], seated: false },
+    // Sideways on the window bench, knees up, the glass at your shoulder. Sat between two mullions and
+    // turned a little down the room, so the view is the shore and the deck rather than bare horizon.
+    windowSeat: { eye: [8.5, 1.36, .15], yaw: -1.72, pitch: -.13, stand: [7.9, 0, -1.9], seated: true },
   } satisfies Record<PlaceId, Place>,
   books: [
     { title: 'A room of one’s own', author: 'Virginia Woolf', description: 'A quiet space for imagination, independence, and making something your own.', url: 'https://www.gutenberg.org/ebooks/search/?query=A+Room+of+Ones+Own', color: '#ad654b' },

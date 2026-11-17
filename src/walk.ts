@@ -7,7 +7,7 @@ type Disc = [x: number, z: number, radius: number];
 
 const BODY = .36;   // clearance kept from walls and furniture
 const STEP = .6;    // tallest change of level one stride may take
-const { room, loft, furniture: f, bedSize, worktable, lowerLibrary, sleepingNook, stairs, dresser } = home;
+const { room, loft, furniture: f, bedSize, worktable, lowerLibrary, sleepingNook, stairs, dresser, windowSeat } = home;
 const rear = -room.depth / 2;
 export const loftFloor = loft.position[1] + loft.size[1] / 2;
 const loftFront = loft.position[2] + loft.size[2] / 2, loftRight = loft.position[0] + loft.size[0] / 2, loftLeft = loft.position[0] - loft.size[0] / 2;
@@ -30,8 +30,14 @@ const ground: { rects: Rect[]; discs: Disc[] } = {
     [stairs.x - stairs.width / 2, stairs.x + stairs.width / 2, rear, stairs.foot - stairs.going], // under and beside the stair
     around(f.loungeShelf, .5, 2.7),
     [.25, 2.35, 4.55, room.front],                                                          // entry bench
+    around(windowSeat.center, windowSeat.size[0], windowSeat.size[2]),                      // the bench in the sill
+    [f.stove[0] - .48, f.stove[0] + .42, f.stove[2] - .35, f.stove[2] + .35],               // the stove and its hearth
+    [f.blanketLadder[0] - .32, f.blanketLadder[0] + .32, rear, f.blanketLadder[2] + .22],   // the blanket ladder
   ],
-  discs: [[f.gamingChair[0], f.gamingChair[2], .55], [f.readingChair[0], f.readingChair[2], .8], [f.ottoman[0], f.ottoman[2], .5], [.48, -5.38, .35], [5.6, 3.85, .3]],
+  // The gaming chair's disc is kept just wider than the seat itself, so the lane between it and the
+  // left wall stays open for walking up to the stove.
+  discs: [[f.gamingChair[0], f.gamingChair[2], .5], [f.readingChair[0], f.readingChair[2], .8], [f.ottoman[0], f.ottoman[2], .5], [.48, -5.38, .35], [5.6, 3.85, .3],
+    [f.petBed[0], f.petBed[2], .4], [f.pouf[0], f.pouf[2], .42]],
 };
 const upstairs: { rects: Rect[]; discs: Disc[] } = {
   rects: [around(f.teaTable, 2.1, 1.1)],

@@ -72,6 +72,19 @@ export function BedsideLamp({ on, glowing, p, children }: { on: boolean; glowing
   </group>;
 }
 
+/** A ladder leaning on the bed screen with two throws folded over its rungs. */
+export function BlanketLadder() {
+  const rungs = [.62, 1.12, 1.62, 2.12];
+  return <group position={home.furniture.blanketLadder} rotation={[-.1, 0, 0]}>
+    {[-.3, .3].map(x => <Box key={x} p={[x, 1.3, 0]} s={[.075, 2.6, .07]} c="#a98366" />)}
+    {rungs.map(y => <Cylinder key={y} p={[0, y, 0]} top={.032} height={.62} c="#9c7a58" rotation={[0, 0, Math.PI / 2]} />)}
+    <Cloth p={[0, 1.6, .08]} s={[.56, .5, .17]} c={seaBlue} thread={7} />
+    <Cloth p={[0, 1.38, .1]} s={[.52, .13, .22]} c="#5f8795" thread={7} />
+    <Cloth p={[.02, 1.06, .08]} s={[.58, .46, .16]} c={clay} thread={4} />
+    <Cloth p={[.02, .86, .1]} s={[.54, .12, .2]} c="#a9654c" thread={4} />
+  </group>;
+}
+
 /** A television on castors that rolls between the foot of the bed and the sea window. */
 export function Television({ besideBed, reduced }: { besideBed: boolean; reduced: boolean }) {
   const ref = useRef<THREE.Group>(null), invalidate = useThree(s => s.invalidate);

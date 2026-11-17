@@ -14,6 +14,8 @@ React, TypeScript, Vite, Three.js, React Three Fiber, Drei, CSS. No backend or p
 
 First-person presence: look around, walk the floor and the stair, sit at the desk, on the bed, in the reading chair and at the tea table; orbit and zoom from the two outside views; configurable website through the computer; clickable bookcases, tea table, and rolling TV; animated curtains; lamps; day, sunset, night, and rain; responsive keyboard-accessible controls; capped DPR and paused hidden-page rendering.
 
+The room also keeps a second warm corner and a few places to settle that are not on the toolbar: a wood stove whose fire never goes out, with the cat asleep beside it; a bench built into the window sill that can be curled up on; a string of bulbs along the loft railing; a pouf and magazines by the reading chair; and a blanket ladder on the bed screen.
+
 Smaller interactions give the room things to find: dresser drawers that slide open, a sea-window casement that swings out and sets the curtains moving, a teapot that pours, single book spines that open the reading list at their title, the coat and hat by the door that stand the visitor at the dresser mirror, a record player whose ambience is synthesised in the browser rather than downloaded, and a meteor over the sea when the window is opened after dark. The chosen light, lamps and curtains are remembered between visits.
 
 ## Design direction

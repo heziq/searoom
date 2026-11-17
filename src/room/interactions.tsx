@@ -4,7 +4,7 @@ import type { PlaceId } from '../config';
 
 // Everything in the room that answers a click, in one list. The scene reads it for its hover labels,
 // the page reads it for the toolbar and the seated card, so a new interaction is added in one place.
-export type Action = 'computer' | 'bed' | 'lounge' | 'curtains' | 'lamp' | 'books' | 'tea' | 'television' | 'dresser' | 'mirror' | 'music' | 'window' | 'pour';
+export type Action = 'computer' | 'bed' | 'lounge' | 'curtains' | 'lamp' | 'books' | 'tea' | 'television' | 'dresser' | 'mirror' | 'music' | 'window' | 'pour' | 'windowSeat';
 /** The side panels the page can open. The computer's panel follows from sitting at the desk. */
 export type Panel = 'books' | 'television';
 /** What the room is doing, as far as the labels and the scene need to know. */
@@ -52,6 +52,7 @@ export const interactions: Interaction[] = [
   { id: 'television', icon: 'television', label: 'TV', aria: 'Explore rolling television', hover: 'Explore the rolling television', group: 'things', panel: 'television' },
   // Found by looking rather than by the toolbar.
   { id: 'mirror', icon: 'mirror', label: 'Mirror', aria: 'Stand at the mirror', hover: 'Try the coat and the sun hat on', place: 'mirror' },
+  { id: 'windowSeat', icon: 'chair', label: 'Window seat', aria: 'Sit on the window seat', hover: 'Curl up on the window seat', place: 'windowSeat', seat: { title: 'On the window seat', line: 'Knees up, glass at your shoulder, and the tide doing the talking.' } },
   { id: 'pour', icon: 'tea', label: 'Pour', aria: 'Pour the tea', hover: 'Pour a cup', pulse: 'pour' },
 ];
 

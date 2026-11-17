@@ -150,6 +150,45 @@ test('the mirror place stands in front of the dresser, facing the glass, and can
   assert.ok(Math.hypot(reached.x - spot.stand[0], reached.z - spot.stand[2]) < .3);
 });
 
+test('the wood stove stands on the left wall past the desk window, with the cat asleep beside it', () => {
+  const {room, worktable, furniture: {stove, petBed, desk}} = home;
+  assert.ok(stove[0] + room.width/2 < 1);                          // tucked against the left wall
+  assert.ok(stove[2] - .35 > 4.05);                                // past the desk window
+  assert.ok(stove[2] + .35 < room.front);                          // and short of the front wall
+  assert.ok(stove[0] + .42 < desk[0] - worktable.size[0]/2);       // nothing of the desk is in the fire's way
+  assert.ok(Math.hypot(petBed[0]-stove[0], petBed[2]-stove[2]) < 1.6);
+  assert.equal(floorAt(stove[0], stove[2], 0), null);              // you cannot walk into the stove
+  assert.equal(floorAt(petBed[0], petBed[2], 0), null);            // nor onto the cat
+  const entry = home.places.entry.stand;
+  const warm = follow({x: entry[0], y: entry[1], z: entry[2]}, {x: stove[0] + .1, y: 0, z: stove[2] - .9});
+  assert.ok(Math.hypot(warm.x - stove[0], warm.z - stove[2]) < 1.3, 'the fire should be close enough to stand by');
+});
+
+test('the window seat is built into the sill, behind the curtains, and can be curled up on', () => {
+  const {windowSeat: {center, size}, window, places} = home;
+  assert.ok(center[0] + size[0]/2 < window.x - .3);                // the curtains draw between it and the glass
+  assert.ok(center[2] - size[2]/2 > window.start && center[2] + size[2]/2 < window.end);
+  assert.equal(floorAt(center[0], center[2], 0), null);            // the bench is furniture, not floor
+  const seat = places.windowSeat;
+  assert.ok(seat.seated && seat.eye[1] > size[1] && seat.eye[1] < 1.8);
+  assert.ok(Math.abs(seat.eye[0] - center[0]) < .4);
+  assert.ok(seat.yaw < -1.3 && seat.yaw > -1.9);                   // turned to face the sea
+  const entry = places.entry.stand;
+  const got = follow({x: entry[0], y: entry[1], z: entry[2]}, {x: seat.stand[0], y: seat.stand[1], z: seat.stand[2]});
+  assert.ok(Math.hypot(got.x - seat.stand[0], got.z - seat.stand[2]) < .3);
+});
+
+test('the pouf and the blanket ladder stay out of the way of sitting down', () => {
+  const {sleepingNook, places, furniture: {pouf, readingChair, blanketLadder}} = home;
+  assert.ok(Math.hypot(pouf[0]-readingChair[0], pouf[2]-readingChair[2]) > 1.2);   // beside the chair, not in it
+  assert.equal(floorAt(pouf[0], pouf[2], 0), null);
+  const lounge = places.lounge.stand;
+  assert.equal(floorAt(lounge[0], lounge[2], 0), 0);                               // still somewhere to stand up
+  assert.ok(blanketLadder[2] < -5.5);                                              // leaning on the rear wall
+  assert.ok(blanketLadder[0] > 0 && blanketLadder[0] < sleepingNook.left);         // in the gap beside the alcove
+  assert.equal(floorAt(blanketLadder[0], blanketLadder[2], 0), null);
+});
+
 test('every place to settle is inside the room, with somewhere to stand up', () => {
   const {room, places} = home;
   for (const [name, place] of Object.entries(places)) {

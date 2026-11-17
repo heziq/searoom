@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { home, type Atmosphere } from '../config';
@@ -80,6 +80,40 @@ function Casement({ open, reduced }: { open: boolean; reduced: boolean }) {
       <meshPhysicalMaterial color="#dfeaec" transparent opacity={.16} roughness={.05} metalness={0} side={THREE.DoubleSide} />
     </mesh>
     <Cylinder p={[-.12, 0, bay - .14]} top={.028} height={.2} c="#8a7350" rotation={[0, 0, Math.PI / 2]} />
+  </group>;
+}
+
+/** A string of small bulbs swagged along the loft rail. One instanced mesh and one cord for all of
+ *  them, and a single soft light for the whole string, so a hundred little lamps stay cheap. */
+function StringLights({ glowing }: { glowing: number }) {
+  const [cx, y, z] = home.loft.position, [width, thickness, depth] = home.loft.size;
+  const left = cx - width / 2, front = z + depth / 2, rail = y + thickness / 2 + home.stairs.railHeight;
+  const count = 44, swags = 6;
+  const points = useMemo(() => Array.from({ length: count }, (_, i) => {
+    const t = i / (count - 1), sag = Math.sin(((t * swags) % 1) * Math.PI);
+    return new THREE.Vector3(left + t * width, rail + .11 - sag * .27, front + .07);
+  }), [left, width, rail, front]);
+  const cord = useMemo(() => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), count * 2, .005, 4, false), [points]);
+  const bulbs = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    if (!bulbs.current) return;
+    const at = new THREE.Object3D();
+    points.forEach((point, i) => {
+      at.position.set(point.x, point.y - .055, point.z);
+      at.scale.setScalar(i % 3 === 1 ? .92 : 1);
+      at.updateMatrix();
+      bulbs.current!.setMatrixAt(i, at.matrix);
+    });
+    bulbs.current.instanceMatrix.needsUpdate = true;
+    bulbs.current.computeBoundingSphere();
+  }, [points]);
+  return <group>
+    <mesh geometry={cord}><meshStandardMaterial color="#6d6252" roughness={.95} /></mesh>
+    <instancedMesh ref={bulbs} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[.046, 8, 6]} />
+      <meshStandardMaterial color="#f7eeda" emissive="#ffd49c" emissiveIntensity={glowing ? .55 + glowing * 1.5 : 0} roughness={.45} toneMapped={false} />
+    </instancedMesh>
+    <pointLight position={[cx, rail - .25, front + .3]} color={lampLight} intensity={2.4 * glowing} distance={7.5} />
   </group>;
 }
 
@@ -193,5 +227,6 @@ export function Architecture({ atmosphere, glowing, sash, reduced }: { atmospher
     <Box p={[window.x - .18, window.bottom - .02, (window.start + window.end) / 2]} s={[.5, .12, window.end - window.start + .12]} c="#c49c70" />
     <Interactive id="window"><Casement open={sash} reduced={reduced} /></Interactive>
     <Mezzanine />
+    <StringLights glowing={glowing} />
   </group>;
 }

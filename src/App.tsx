@@ -215,7 +215,7 @@ export default function App() {
           <li><strong>Look around</strong>Drag to turn your head. From outside, drag to orbit and scroll or pinch to zoom.</li>
           <li><strong>Walk</strong>Click the floor or a stair to walk there, or use W A S D and the arrow keys. Scrolling takes a step forward.</li>
           <li><strong>Settle in</strong>Click the desk, the bed, the chair by the sea window or the tea table to sit. The curtains, the lamps, the dresser, the window and the television answer a click too, and every one has a button below.</li>
-          <li><strong>Small things</strong>Tip the teapot to pour a cup. Take a book off a shelf to read about it. Try the coat and the sun hat on at the mirror. Put a record on for the sound of the water.</li>
+          <li><strong>Small things</strong>Tip the teapot to pour a cup. Take a book off a shelf to read about it. Curl up on the bench in the window. Try the coat and the sun hat on at the mirror. Put a record on for the sound of the water. The stove keeps burning either way.</li>
           <li><strong>Set the mood</strong>Choose your light, or let a little rain fall. Open the window after dark and keep an eye on the sky.</li>
           <li><strong>Come back</strong>Press Escape to stand up or close a panel. The home button returns you to the doorway.</li>
         </ul>

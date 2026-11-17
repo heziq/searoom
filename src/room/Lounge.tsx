@@ -1,6 +1,31 @@
 import { home } from '../config';
 import { weave } from '../textures';
-import { Beam, BookStack, Box, Ceramic, Cloth, Cylinder, LampShade, Mug, Plant, Soft, Steam, clay, lampLight, oak, oakDeep, seaBlue } from './primitives';
+import { Beam, BookStack, Box, Ceramic, Cloth, Cylinder, Grounding, LampShade, Mug, Plant, Soft, Steam, clay, lampLight, linen, oak, oakDeep, seaBlue } from './primitives';
+import { Interactive } from './interactions';
+
+/** A bench built into the sea window's sill: cushions along the back, a throw over one end. */
+export function WindowSeat() {
+  const { center, size } = home.windowSeat;
+  const [depth, height, length] = size;
+  return <Interactive id="windowSeat">
+    <group position={center}>
+      <Soft p={[0, height - .05, 0]} s={[depth, .1, length]} c="#b9906a" />
+      <Box p={[0, height / 2 - .06, 0]} s={[depth - .06, height - .12, length - .04]} c="#c3a480" />
+      {[-1, 1].map(side => <Box key={side} p={[0, height / 2 - .06, side * (length / 2 - .05)]} s={[depth, height - .12, .09]} c="#a77e58" />)}
+      {/* Two long cushions, a round bolster and a throw tipped over the end. */}
+      {[-.62, .62].map(z => <Cloth key={z} p={[0, height + .06, z]} s={[depth - .04, .13, 1.16]} c={linen} thread={6} />)}
+      {[-.78, .5].map((z, i) => <Cloth key={z} p={[-.06, height + .24, z]} s={[.16, .38, .52]} c={i ? seaBlue : '#dcd2c0'} rotation={[0, 0, .2 - i * .1]} thread={4} />)}
+      <mesh position={[.02, height + .2, 1.0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[.11, .11, .42, 14]} /><meshStandardMaterial color={clay} roughness={1} bumpMap={weave(4)} bumpScale={1.3} />
+      </mesh>
+      <Cloth p={[.04, height + .1, -.42]} s={[depth, .1, .78]} c="#9fb3b8" rotation={[0, .04, 0]} thread={5} />
+      <Cloth p={[.2, height - .2, -.5]} s={[.12, .5, .6]} c="#9fb3b8" thread={5} />
+      {/* Somewhere to put the cup down. */}
+      <Mug p={[.03, height + .13, 1.08]} c="#e9e3d6" />
+    </group>
+    <Grounding p={[center[0] - .1, .035, center[2]]} s={[1.3, length + .7]} o={.45} />
+  </Interactive>;
+}
 
 /** The sea-window corner: a deep chair with its back guarded by a low shelf, a footstool, a reading lamp. */
 export function Lounge({ on, glowing, reduced }: { on: boolean; glowing: number; reduced: boolean }) {
@@ -33,6 +58,17 @@ export function Lounge({ on, glowing, reduced }: { on: boolean; glowing: number;
       {[-.84, 0, .84].map((z, bay) => ['#3f6679', '#d8cdb8', clay, '#5d7a62', '#e5dcc6'].slice(0, 4 + bay % 2).map((tone, i) => <Box key={`${z}-${i}`} p={[-.16, .36 + ((i + bay) % 3) * .03, z - .26 + i * .13]} s={[.3, .48 + ((i + bay) % 3) * .06, .1]} c={['#3f6679', '#d8cdb8', clay, '#5d7a62', '#e5dcc6'][(i + bay * 2) % 5]} />))}
       <Plant p={[0, 1.08, -.95]} scale={.42} /><BookStack p={[0, 1.08, .15]} tones={['#6f9aab', '#e5dcc6']} turn={1.2} />
       <Ceramic p={[0, 1.08, .95]} />
+    </group>
+    {/* A floor pouf beside the chair, with magazines sliding off a pile next to it. */}
+    <group position={home.furniture.pouf}>
+      <mesh position={[0, .22, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[.38, .42, .44, 26]} />
+        <meshStandardMaterial color="#c2a079" roughness={1} bumpMap={weave(3)} bumpScale={1.6} />
+      </mesh>
+      <mesh position={[0, .44, 0]} castShadow><cylinderGeometry args={[.3, .38, .06, 26]} /><meshStandardMaterial color="#b1906b" roughness={1} /></mesh>
+      <Cylinder p={[0, .455, 0]} top={.05} height={.04} c="#9c7d5c" />
+      {[0, 1, 2, 3].map(i => <Soft key={i} p={[-.5 - i * .012, .02 + i * .035, .34 + i * .03]} s={[.34, .032, .46]} c={['#3f6679', '#e5dcc6', clay, '#8fa39f'][i]} rotation={[0, .3 - i * .16, 0]} />)}
+      <Grounding p={[-.2, .04, .14]} s={[1.6, 1.5]} o={.5} />
     </group>
   </>;
 }

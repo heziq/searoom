@@ -2,16 +2,17 @@ import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { CameraControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { home, type Position } from './config';
+import { home, type Atmosphere, type Position } from './config';
 import { Outside } from './Outside';
 import { Presence } from './Presence';
 import { Architecture, Curtains, Floors } from './room/Architecture';
-import { Bed, BedsideLamp, SleepingNook, Television } from './room/Bedroom';
+import { Bed, BedsideLamp, BlanketLadder, SleepingNook, Television } from './room/Bedroom';
 import { Details } from './room/Details';
+import { Hearth } from './room/Hearth';
 import { InteractionProvider, Interactive } from './room/interactions';
 import { Bookcase } from './room/Library';
 import { Lighting, Motes, Rain } from './room/Lighting';
-import { Lounge } from './room/Lounge';
+import { Lounge, WindowSeat } from './room/Lounge';
 import { BookStack, Mug, clay, lampLevel } from './room/primitives';
 import { TeaRoom } from './room/TeaRoom';
 import { UnderLoft } from './room/UnderLoft';
@@ -22,6 +23,9 @@ import type { RoomProps, View } from './room/types';
 // hands the camera between standing inside and the two views from outside.
 export type { Action } from './room/interactions';
 export type { RoomProps, View } from './room/types';
+
+/** The stove burns whatever the hour; it just counts for more once the daylight goes. */
+const fireLevel: Record<Atmosphere, number> = { day: .45, sunset: 1, night: 1.5 };
 
 const orbits: Record<Exclude<View, 'inside'>, [Position, Position]> = {
   front: [[3.2, 3.35, 15.3], [.2, 2.5, -2.6]],
@@ -60,8 +64,10 @@ export function Room(props: RoomProps) {
     <Architecture atmosphere={props.atmosphere} glowing={glowing} sash={props.sash} reduced={props.reduced} />
     <Floors onWalk={props.onWalk} />
     <Interactive id="bed"><Bed /></Interactive>
-    <SleepingNook glowing={glowing} />
+    <SleepingNook glowing={glowing} /><BlanketLadder />
     <GamingChair /><Details /><UnderLoft on={props.lamp} glowing={glowing} drawers={props.drawers} music={props.music} reduced={props.reduced} />
+    <Hearth fire={fireLevel[props.atmosphere]} reduced={props.reduced} />
+    <WindowSeat />
     <Interactive id="computer"><Desk focus={props.focus} glowing={glowing} reduced={props.reduced} /></Interactive>
     <Interactive id="lounge"><Lounge on={props.lamp} glowing={glowing} reduced={props.reduced} /></Interactive>
     <Interactive id="lamp">
