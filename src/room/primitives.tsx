@@ -49,14 +49,17 @@ export function Framed({ p, s, kind, rotation }: { p: Position; s: [number, numb
 export function LampShade({ p, top, bottom, height, on }: { p: Position; top: number; bottom: number; height: number; on: boolean }) {
   return <mesh position={p} castShadow><cylinderGeometry args={[top, bottom, height, 24, 1, true]} /><meshStandardMaterial color="#efe3cb" side={THREE.DoubleSide} roughness={1} emissive="#ffc98f" emissiveIntensity={on ? .75 : 0} /></mesh>;
 }
-/** A thread of steam above a warm cup. */
-export function Steam({ p, reduced }: { p: Position; reduced: boolean }) {
+/** A thread of steam above a warm cup. A fresh pour, if one is passed, briefly thickens it. */
+export function Steam({ p, reduced, pour }: { p: Position; reduced: boolean; pour?: { progress: number } }) {
   const wisps = useRef<THREE.Group>(null);
-  useFrame(({ clock }) => wisps.current?.children.forEach((child, i) => {
-    const t = ((reduced ? .35 : clock.elapsedTime * .2) + i / 3) % 1, wisp = child as THREE.Sprite;
-    wisp.position.set(Math.sin(t * 5 + i * 2) * .035, t * .5, Math.cos(t * 4 + i) * .02);
-    wisp.material.opacity = Math.sin(t * Math.PI) * .13; wisp.scale.setScalar(.1 + t * .2);
-  }));
+  useFrame(({ clock }) => {
+    const fresh = pour ? 1 - pour.progress : 0;
+    wisps.current?.children.forEach((child, i) => {
+      const t = ((reduced ? .35 : clock.elapsedTime * (.2 + fresh * .2)) + i / 3) % 1, wisp = child as THREE.Sprite;
+      wisp.position.set(Math.sin(t * 5 + i * 2) * .035, t * (.5 + fresh * .25), Math.cos(t * 4 + i) * .02);
+      wisp.material.opacity = Math.sin(t * Math.PI) * (.13 + fresh * .2); wisp.scale.setScalar((.1 + t * .2) * (1 + fresh * .5));
+    });
+  });
   return <group ref={wisps} position={p}>{[0, 1, 2].map(i => <sprite key={i}><spriteMaterial map={glow()} transparent opacity={0} depthWrite={false} /></sprite>)}</group>;
 }
 export function Rug({ p, s, style, name, round = false }: { p: Position; s: [number, number]; style: Parameters<typeof rug>[1]; name: string; round?: boolean }) {

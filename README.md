@@ -33,7 +33,9 @@ An 18.5 × 12.5 rectangular loft has a compact tea-room mezzanine attached to th
 - **Mezzanine:** a Chinese-inspired solid-wood tea table on a woven mat under a paper lantern, with simple chairs, teaware, floor cushions, a long back-wall bookcase, plants, chart and sailboat.
 - **By the door:** a peg rail with a coat and a sun hat, a bench, and a shelf within reach of the desk. The front wall and ceiling appear only while you are inside; the outside views stay open.
 
-Day, sunset, night, and rain are at the top right. Every lamp in the house answers the lamp button (or a click on a bedside lamp), and they matter most after dark. Curtains, the bookcases, and the rolling television are clickable too. The home button returns you to the doorway.
+Day, sunset, night, and rain are at the top right. Every lamp in the house answers the lamp button (or a click on a bedside lamp), and they matter most after dark. Curtains, the bookcases, the dresser, the sea window and the rolling television are clickable too. The home button returns you to the doorway.
+
+Smaller things reward a look around: tip the teapot and it pours, and the cups steam harder for a while; take a single book off a shelf and the reading list opens at that title; the coat and sun hat by the door stand you at the dresser mirror; and the record player on the console plays the sound of the water, synthesised in the browser rather than loaded as a file, so it starts only when you ask for it. Open the casement after dark and a slow meteor crosses the sea. The light, the lamps and the curtains are remembered for your next visit.
 
 ## Customize
 
@@ -46,7 +48,8 @@ Edit `src/config.ts` for room and furniture positions, dimensions, the places to
 - `src/room/Bedroom.tsx`, `Workspace.tsx`, `Lounge.tsx`, `Library.tsx`, `TeaRoom.tsx`, `UnderLoft.tsx` — one corner of the room each.
 - `src/room/Details.tsx` — rugs, plants and the small traces of someone living here.
 - `src/room/Lighting.tsx` — daylight, lamps, dust and rain.
-- `src/Outside.tsx` — sky, sea, shore and lighthouse beyond the window.
+- `src/Outside.tsx` — sky, sea, shore, lighthouse and the night's meteor beyond the window.
+- `src/audio.ts` — the record player's ambience, synthesised with the Web Audio API so there is no audio file to ship.
 - `src/Presence.tsx` — the first-person camera: looking, walking, sitting.
 - `src/walk.ts` — where a visitor can stand and how they get there (pure, covered by tests).
 - `src/textures.ts` — small procedural textures for wood, cloth, plaster, rugs and prints.

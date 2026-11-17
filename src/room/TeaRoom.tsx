@@ -1,6 +1,10 @@
+import { useEffect, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import { home, type Position } from '../config';
 import { rug, weave } from '../textures';
 import { Beam, BookStack, Box, Cloth, Cylinder, Plant, Sailboat, Soft, Steam, lampLight, seaBlue } from './primitives';
+import { Interactive } from './interactions';
 
 function TeaChair({ p, turn = 0 }: { p: Position; turn?: number }) {
   return <group position={p} rotation={[0, turn, 0]}>
@@ -21,19 +25,37 @@ function HangingVine({ p, length = 1 }: { p: Position; length?: number }) {
 }
 
 /** The mezzanine: a solid-wood tea table on a woven mat under a paper lantern, with the sea ahead. */
-export function TeaRoom({ glowing, reduced }: { glowing: number; reduced: boolean }) {
+export function TeaRoom({ glowing, reduced, poured }: { glowing: number; reduced: boolean; poured: number }) {
   const floor = home.loft.position[1] + home.loft.size[1] / 2, [tx, , tz] = home.furniture.teaTable;
+  const pot = useRef<THREE.Group>(null), invalidate = useThree(s => s.invalidate);
+  // `progress` runs 0 → 1 over one pour. The steam reads it too, so a fresh cup gives off more.
+  const pour = useRef({ progress: 1 }).current;
+  useEffect(() => { if (poured) { pour.progress = 0; invalidate(); } }, [poured, pour, invalidate]);
+  useFrame((_, dt) => {
+    if (pour.progress >= 1) return;
+    pour.progress = Math.min(1, pour.progress + dt / (reduced ? .01 : 1.9));
+    if (pot.current) pot.current.rotation.z = -Math.sin(pour.progress * Math.PI) * .6;
+    invalidate();
+  });
   return <>
+    {/* The teapot answers on its own, so it stays outside the group below: nested handlers both fire,
+     *  and sitting down would win over pouring. */}
+    <Interactive id="pour">
+      <group ref={pot} position={[tx, home.furniture.teaTable[1] + .96, tz]}>
+        <Cylinder p={[0, -.02, 0]} top={.12} bottom={.16} height={.13} c="#d4e2d8" />
+        <Cylinder p={[0, .065, 0]} top={.068} height={.04} c="#d4e2d8" />
+        <Cylinder p={[.19, -.01, 0]} top={.02} bottom={.03} height={.14} c="#d4e2d8" rotation={[0, 0, -.9]} />
+      </group>
+    </Interactive>
+    <Interactive id="tea">
     <mesh position={[tx, floor + .03, tz + .12]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[4.5, 3.1]} /><meshStandardMaterial map={rug('tea', { ground: '#cfc3a2', line: 'rgba(120,110,80,.35)', border: '#6d6a56' })} roughness={1} bumpMap={weave(16)} bumpScale={1} /></mesh>
     <group position={home.furniture.teaTable}>
       <Soft p={[0, .75, 0]} s={[2.1, .15, 1.1]} c="#b88959" />
       {[-.78, .78].flatMap(x => [-.38, .38].map(z => <Soft key={`${x}-${z}`} p={[x, .39, z]} s={[.13, .76, .13]} c="#8e6847" />))}
       <Soft p={[0, .84, 0]} s={[.87, .046, .55]} c="#705c47" />
-      <Cylinder p={[0, .94, 0]} top={.12} bottom={.16} height={.13} c="#d4e2d8" />
-      <Cylinder p={[0, 1.025, 0]} top={.068} height={.04} c="#d4e2d8" />
-      <Cylinder p={[.19, .95, 0]} top={.02} bottom={.03} height={.14} c="#d4e2d8" rotation={[0, 0, -.9]} />
       {[-.27, .27].map(x => <Cylinder key={x} p={[x, .92, .17]} top={.055} bottom={.047} height={.07} c="#e0e5d8" />)}
-      <Steam p={[.26, 1.02, 0]} reduced={reduced} />
+      <Steam p={[.26, 1.02, 0]} reduced={reduced} pour={pour} />
+      <Steam p={[-.27, 1.0, .17]} reduced={reduced} pour={pour} />
       <BookStack p={[-.72, .825, -.2]} tones={['#5d7a62', '#e5dcc6']} turn={-.3} />
     </group>
     <TeaChair p={[-3.6, floor, -3.1]} turn={Math.PI} />
@@ -53,5 +75,6 @@ export function TeaRoom({ glowing, reduced }: { glowing: number; reduced: boolea
     {[-.12, .12].map(y => <mesh key={y} position={[tx, floor + 2.72 + y, tz]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[.41, .008, 6, 32]} /><meshStandardMaterial color="#b9a88a" /></mesh>)}
     <pointLight position={[tx, floor + 2.5, tz]} color={lampLight} intensity={6.5 * glowing} distance={7.5} />
     <pointLight position={[-4.5, 5.6, -5.3]} color={lampLight} intensity={.9 * glowing} distance={4} />
+    </Interactive>
   </>;
 }

@@ -32,3 +32,13 @@
 @media(max-width:1280px){.made-for{display:none}.object-controls button{padding:12px 11px}}
 @media(max-width:1100px){.orbit-hint{display:none}.bottom-bar{justify-content:center}.object-controls button{padding:11px 9px;gap:6px}}
 @media(max-width:720px){.scrim::before{background:linear-gradient(180deg,color-mix(in srgb,var(--page) 94%,transparent) 0,color-mix(in srgb,var(--page) 70%,transparent) 240px,transparent 380px)}.atmosphere{padding:10px 10px 0;margin:-10px -10px 0 0}.scene-caption{bottom:186px;left:0;width:100%;text-align:center}.scene-caption.seated{left:16px;width:calc(100% - 32px);bottom:176px;padding:14px 16px;text-align:left}.scene-caption.seated p{font-size:16px}.view-switch{bottom:128px}.view-switch button{padding:7px 11px;font-size:9px}.hover-label{display:none}.bottom-bar{flex-direction:row}.object-controls{width:100%;justify-content:space-between}.object-controls button{flex:1;min-width:0;padding:10px 4px}.object-controls button span{display:none}.object-controls .reset{padding:10px 4px}.object-controls .toolbar-divider{display:none}.computer-panel{top:auto;bottom:112px;transform:none;max-height:45svh;padding:22px}.computer-panel .panel-symbol,.computer-panel .quiet-note{display:none}.computer-panel h2{font-size:28px}.computer-panel .primary-link{margin:14px 0}.computer-panel .text-button{margin-top:4px}}
+
+/* The title you took down off the shelf. */
+.book-list>a.marked{background:linear-gradient(90deg,color-mix(in srgb,#9baa8b 22%,transparent),transparent);border-radius:7px;padding-left:10px;margin-left:-10px}.book-list>a.marked strong{text-decoration:underline;text-underline-offset:4px}.night .book-list>a.marked{background:linear-gradient(90deg,#9baa8b2e,transparent)}
+
+/* A switch on the toolbar shows which way it is set, now that its label is one word. */
+.object-controls button[aria-pressed="true"]{background:#5062491f}.object-controls button[aria-pressed="true"] svg{color:#4c6044}.night .object-controls button[aria-pressed="true"]{background:#ffffff1c}.night .object-controls button[aria-pressed="true"] svg{color:#cfdcc2}
+
+/* The toolbar grew; give it the room the decorative text was using. */
+@media(max-width:1600px){.made-for{display:none}}
+@media(max-width:1380px){.orbit-hint{display:none}}

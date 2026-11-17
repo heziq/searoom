@@ -49,7 +49,29 @@ void main(){
 }`;
 const glitter: Record<Atmosphere, number> = { day: .3, sunset: .85, night: .38 };
 
-export function Outside({ atmosphere, rain, reduced }: { atmosphere: Atmosphere; rain: boolean; reduced: boolean }) {
+/** A slow meteor over the sea. It runs once each time `run` changes, and only after dark. */
+function ShootingStar({ run, reduced }: { run: number; reduced: boolean }) {
+  const star = useRef<THREE.Sprite>(null);
+  const progress = useRef(1);
+  const invalidate = useThree(state => state.invalidate);
+  useEffect(() => { if (run) { progress.current = 0; invalidate(); } }, [run, invalidate]);
+  useFrame((_, dt) => {
+    const sprite = star.current;
+    if (!sprite || progress.current >= 1) { if (sprite) sprite.visible = false; return; }
+    progress.current = Math.min(1, progress.current + dt / (reduced ? .01 : 9));
+    const t = progress.current, fade = Math.sin(t * Math.PI);
+    sprite.visible = fade > .02;
+    // Low enough across the sky to be in view from the reading chair, falling as it crosses.
+    sprite.position.set(30 + t * 18, 19 - t * 12, -25 + t * 47);
+    sprite.material.opacity = fade * .9;
+    sprite.material.rotation = -.5;
+    sprite.scale.set(8 + fade * 4, .85, 1);
+    invalidate();
+  });
+  return <sprite ref={star} visible={false}><spriteMaterial map={glow()} color="#f4f0ff" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} /></sprite>;
+}
+
+export function Outside({ atmosphere, rain, reduced, meteor }: { atmosphere: Atmosphere; rain: boolean; reduced: boolean; meteor: number }) {
   const invalidate = useThree(state => state.invalidate);
   const uniforms = useMemo(() => {
     const a = atmospheres[atmosphere];
@@ -116,5 +138,6 @@ export function Outside({ atmosphere, rain, reduced }: { atmosphere: Atmosphere;
       <mesh position={[7, 6.45, 0]}><coneGeometry args={[.42, .5, 10]} /><meshBasicMaterial color="#7e5a48" /></mesh>
       <sprite ref={beacon} position={[7, 6, 0]} scale={4}><spriteMaterial map={glow()} color="#ffe2b0" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} /></sprite>
     </group>
+    <ShootingStar run={meteor} reduced={reduced} />
   </group>;
 }

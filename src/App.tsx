@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { NeutralToneMapping } from 'three';
 import { home, type Atmosphere, type PlaceId, type Position } from './config';
 import { loftFloor } from './walk';
+import { ambience } from './audio';
 import { Room, type Action, type View } from './Room';
 import { interaction, interactions, seatOf, words } from './room/interactions';
 import type { WalkTarget } from './Presence';
@@ -14,6 +15,21 @@ const captions: Record<Atmosphere, string> = {
   night: 'The world is asleep. Keep a little light on.',
 };
 const groups = ['places', 'things'] as const;
+
+// How the room was left last time. Storage can be unavailable or full, and a private window can
+// refuse it outright, so every touch of it is guarded and the room simply opens at its defaults.
+const STORE = 'dream-home';
+type Remembered = { atmosphere?: Atmosphere; lamp?: boolean; curtains?: boolean };
+const remembered: Remembered = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) || '{}') as Remembered;
+    return {
+      atmosphere: (['day', 'sunset', 'night'] as string[]).includes(saved.atmosphere ?? '') ? saved.atmosphere : undefined,
+      lamp: typeof saved.lamp === 'boolean' ? saved.lamp : undefined,
+      curtains: typeof saved.curtains === 'boolean' ? saved.curtains : undefined,
+    };
+  } catch { return {}; }
+})();
 
 function Icon({ name }: { name: string }) {
   if (name === 'bed') return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 19V8m18 11V8M3 12h18v5H3zM5 12V9h6v3m2 0V9h6v3M3 19v2m18-2v2" /></svg>;
@@ -30,6 +46,10 @@ function Icon({ name }: { name: string }) {
     books: <><path d="M4 4h4v16H4Zm6 0h4v16h-4Zm6 1 3-1 3 15-3 1Z" /></>,
     tea: <><path d="M3 10h15v5a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5v-5Zm15 1h2a2 2 0 0 1 0 4h-2M8 3v3m5-3v3" /></>,
     television: <><rect x="3" y="3" width="18" height="14" rx="1" /><path d="M8 21h8m-4-4v4" /></>,
+    drawer: <><rect x="3" y="4" width="18" height="16" rx="1" /><path d="M3 12h18M10 8h4m-4 8h4" /></>,
+    window: <><rect x="4" y="3" width="16" height="16" rx="1" /><path d="M12 3v16M4 11h16M3 21h18" /></>,
+    music: <><circle cx="6" cy="18" r="2.6" /><circle cx="18" cy="16" r="2.6" /><path d="M8.6 18V6l11.4-2v12" /></>,
+    mirror: <><ellipse cx="12" cy="10" rx="6.5" ry="7.5" /><path d="M8 21h8m-4-3.5V21" /></>,
     arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
     close: <path d="m6 6 12 12M6 18 18 6" />,
     help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1.5 1-1.5 1-1.5 3m0 3v.1" /></>,
@@ -48,13 +68,14 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 }
 
 export default function App() {
-  const [atmosphere, setAtmosphere] = useState<Atmosphere>('day'), [curtains, setCurtains] = useState(true), [lamp, setLamp] = useState(true), [rain, setRain] = useState(false);
+  const [atmosphere, setAtmosphere] = useState<Atmosphere>(remembered.atmosphere ?? 'day'), [curtains, setCurtains] = useState(remembered.curtains ?? true), [lamp, setLamp] = useState(remembered.lamp ?? true), [rain, setRain] = useState(false);
   const [view, setView] = useState<View>('inside'), [place, setPlace] = useState<PlaceId | null>(null), [placeKey, setPlaceKey] = useState(0), [walkTarget, setWalkTarget] = useState<WalkTarget | null>(null), [settled, setSettled] = useState(false);
   const [books, setBooks] = useState(false), [television, setTelevision] = useState(false), [tvBesideBed, setTvBesideBed] = useState(true), [help, setHelp] = useState(false), [hover, setHover] = useState(''), [reset, setReset] = useState(0);
+  const [drawers, setDrawers] = useState(false), [sash, setSash] = useState(false), [music, setMusic] = useState(false), [poured, setPoured] = useState(0), [meteor, setMeteor] = useState(0), [bookmark, setBookmark] = useState<number | null>(null);
   const [visible, setVisible] = useState(!document.hidden), [reduced, setReduced] = useState(matchMedia('(prefers-reduced-motion: reduce)').matches);
   const panel = useRef<HTMLElement>(null), trigger = useRef<HTMLElement | null>(null), veil = useRef<HTMLDivElement>(null);
   const inside = view === 'inside', focus = inside && place === 'computer', seat = inside && place ? seatOf(place) : undefined, panelOpen = focus || books || television || help;
-  const ui = { curtains, lamp };
+  const ui = { curtains, lamp, drawers, sash, music };
   useEffect(() => {
     const update = () => setVisible(!document.hidden);
     const media = matchMedia('(prefers-reduced-motion: reduce)');
@@ -63,6 +84,12 @@ export default function App() {
     media.addEventListener('change', motion);
     return () => { document.removeEventListener('visibilitychange', update); media.removeEventListener('change', motion); document.body.style.cursor = ''; };
   }, []);
+  // Leave the room as it was found next time.
+  useEffect(() => {
+    try { localStorage.setItem(STORE, JSON.stringify({ atmosphere, lamp, curtains })); } catch { /* nothing to remember with */ }
+  }, [atmosphere, lamp, curtains]);
+  useEffect(() => { ambience(music); }, [music]);
+  useEffect(() => () => { ambience(false); }, []);
 
   const closePanels = () => { setBooks(false); setTelevision(false); setHelp(false); setHover(''); };
   /** Close whatever is open and get up from wherever the visitor is sitting. */
@@ -83,10 +110,25 @@ export default function App() {
     setHover('');
     if (entry.toggle === 'curtains') return setCurtains(value => !value);
     if (entry.toggle === 'lamp') return setLamp(value => !value);
+    if (entry.toggle === 'drawers') return setDrawers(value => !value);
+    if (entry.toggle === 'music') return setMusic(value => !value);
+    if (entry.toggle === 'sash') {
+      const opening = !sash;
+      setSash(opening);
+      if (opening && atmosphere === 'night') setMeteor(count => count + 1);   // worth looking up for
+      return;
+    }
+    if (entry.pulse === 'pour') return setPoured(count => count + 1);
     closePanels();
-    if (entry.panel === 'books') setBooks(true);
+    if (entry.panel === 'books') { setBookmark(null); setBooks(true); }
     if (entry.panel === 'television') setTelevision(true);
     if (entry.place) goTo(entry.place);
+  };
+  /** A spine taken off the shelf opens the library at that title, without moving the visitor. */
+  const openBook = (index: number) => {
+    setHover(''); closePanels();
+    setBookmark(index % home.books.length);
+    setBooks(true);
   };
   const walkTo = ([x, y, z]: Position) => {
     closePanels(); setView('inside'); setPlace(null); setSettled(true);
@@ -99,7 +141,7 @@ export default function App() {
       <SceneBoundary>
         <Suspense fallback={<div className="loading">Making room for you…</div>}>
           <Canvas shadows dpr={[1, 1.5]} frameloop={!visible ? 'never' : rain && !reduced ? 'always' : 'demand'} camera={{ position: home.places.entry.eye, fov: 62, near: .1, far: 260 }} gl={{ antialias: true, powerPreference: 'low-power', toneMapping: NeutralToneMapping }}>
-            <Room atmosphere={atmosphere} curtains={curtains} lamp={lamp} focus={focus} view={view} place={place} placeKey={placeKey} walkTarget={walkTarget} rain={rain} reduced={reduced} tvBesideBed={tvBesideBed} reset={reset} veil={veil} onAction={action} onHover={setHover} onWalk={walkTo} onEngage={() => setSettled(true)} onWander={() => setPlace(null)} />
+            <Room atmosphere={atmosphere} curtains={curtains} lamp={lamp} focus={focus} view={view} place={place} placeKey={placeKey} walkTarget={walkTarget} rain={rain} reduced={reduced} tvBesideBed={tvBesideBed} reset={reset} veil={veil} drawers={drawers} sash={sash} music={music} poured={poured} meteor={meteor} onAction={action} onHover={setHover} onWalk={walkTo} onBook={openBook} onEngage={() => setSettled(true)} onWander={() => setPlace(null)} />
           </Canvas>
         </Suspense>
       </SceneBoundary>
@@ -172,17 +214,18 @@ export default function App() {
         <ul className="help-list">
           <li><strong>Look around</strong>Drag to turn your head. From outside, drag to orbit and scroll or pinch to zoom.</li>
           <li><strong>Walk</strong>Click the floor or a stair to walk there, or use W A S D and the arrow keys. Scrolling takes a step forward.</li>
-          <li><strong>Settle in</strong>Click the desk, the bed, the chair by the sea window or the tea table to sit. Curtains, lamps, books and the television answer a click too, and every one has a button below.</li>
-          <li><strong>Set the mood</strong>Choose your light, or let a little rain fall.</li>
+          <li><strong>Settle in</strong>Click the desk, the bed, the chair by the sea window or the tea table to sit. The curtains, the lamps, the dresser, the window and the television answer a click too, and every one has a button below.</li>
+          <li><strong>Small things</strong>Tip the teapot to pour a cup. Take a book off a shelf to read about it. Try the coat and the sun hat on at the mirror. Put a record on for the sound of the water.</li>
+          <li><strong>Set the mood</strong>Choose your light, or let a little rain fall. Open the window after dark and keep an eye on the sky.</li>
           <li><strong>Come back</strong>Press Escape to stand up or close a panel. The home button returns you to the doorway.</li>
         </ul>
         <button className="primary-link" onClick={closePanels}>Let’s settle in<Icon name="arrow" /></button>
       </> : books ? <>
         <div className="panel-symbol"><Icon name="books" /></div>
         <h2 id="panel-title">A life in books.</h2>
-        <p>A few pages. A different world.</p>
+        <p>{bookmark === null ? 'A few pages. A different world.' : 'You took one down off the shelf.'}</p>
         <div className="book-list">
-          {home.books.map((b, i) => <a href={b.url} target="_blank" rel="noreferrer" key={b.title}>
+          {home.books.map((b, i) => <a className={bookmark === i ? 'marked' : ''} href={b.url} target="_blank" rel="noreferrer" key={b.title}>
             <span className="book-spine" style={{ background: b.color }}>{String(i + 1).padStart(2, '0')}</span>
             <span><strong>{b.title}</strong><small>{b.author}</small><p>{b.description}</p></span>
             <Icon name="arrow" />

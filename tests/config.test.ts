@@ -138,6 +138,18 @@ test('the dresser stands against the rear wall under the right end of the loft, 
   assert.ok(dresser[0]-size[0]/2 > consoleTable[0]+1.35+.5);               // clear of the console
 });
 
+test('the mirror place stands in front of the dresser, facing the glass, and can be walked to', () => {
+  const {places, furniture: {dresser}, dresser: {size}} = home;
+  const spot = places.mirror;
+  assert.ok(spot.stand[2] > dresser[2] + size[2]/2 + .5);          // out in front of the drawers
+  assert.ok(Math.abs(spot.stand[0] - (dresser[0] - .38)) < .3);    // lined up with the mirror on top
+  assert.ok(Math.abs(spot.yaw) < .2);                              // yaw 0 faces the rear wall, where the dresser is
+  assert.ok(spot.pitch < 0);                                       // looking a little down into the glass
+  const entry = places.entry.stand;
+  const reached = follow({x: entry[0], y: entry[1], z: entry[2]}, {x: spot.stand[0], y: spot.stand[1], z: spot.stand[2]});
+  assert.ok(Math.hypot(reached.x - spot.stand[0], reached.z - spot.stand[2]) < .3);
+});
+
 test('every place to settle is inside the room, with somewhere to stand up', () => {
   const {room, places} = home;
   for (const [name, place] of Object.entries(places)) {

@@ -1,6 +1,6 @@
 export type Position = [number, number, number];
 export type Atmosphere = 'day' | 'sunset' | 'night';
-export type PlaceId = 'entry' | 'computer' | 'bed' | 'lounge' | 'tea' | 'books';
+export type PlaceId = 'entry' | 'computer' | 'bed' | 'lounge' | 'tea' | 'books' | 'mirror';
 /** A spot to be in: where the eyes rest, which way they face (yaw 0 looks at the rear wall, negative turns toward the sea), and where the feet land on standing up. */
 export type Place = { eye: Position; yaw: number; pitch: number; stand: Position; seated: boolean };
 
@@ -47,6 +47,8 @@ export const home = {
     lounge: { eye: [6.98, 1.8, 2.3], yaw: -1.4, pitch: -.07, stand: [6.3, 0, .75], seated: true },
     tea: { eye: [-3.6, 5.3, -5.5], yaw: -2.5, pitch: -.12, stand: [-5.4, 3.68, -3.2], seated: true },
     books: { eye: [-5.7, 6.18, -2.8], yaw: -.02, pitch: -.07, stand: [-5.7, 3.68, -2.8], seated: false },
+    // Facing the round mirror on the dresser, with the coat and the sun hat from the door to try on.
+    mirror: { eye: [-1.93, 2.5, -4.3], yaw: .02, pitch: -.3, stand: [-1.93, 0, -4.3], seated: false },
   } satisfies Record<PlaceId, Place>,
   books: [
     { title: 'A room of one’s own', author: 'Virginia Woolf', description: 'A quiet space for imagination, independence, and making something your own.', url: 'https://www.gutenberg.org/ebooks/search/?query=A+Room+of+Ones+Own', color: '#ad654b' },

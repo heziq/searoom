@@ -8,7 +8,7 @@ import { Presence } from './Presence';
 import { Architecture, Curtains, Floors } from './room/Architecture';
 import { Bed, BedsideLamp, SleepingNook, Television } from './room/Bedroom';
 import { Details } from './room/Details';
-import { Interactive } from './room/interactions';
+import { InteractionProvider, Interactive } from './room/interactions';
 import { Bookcase } from './room/Library';
 import { Lighting, Motes, Rain } from './room/Lighting';
 import { Lounge } from './room/Lounge';
@@ -32,8 +32,8 @@ export function Room(props: RoomProps) {
   const controls = useRef<CameraControls>(null), wasInside = useRef(true);
   const { camera, invalidate } = useThree(), wide = useThree(state => state.size.width > 1100);
   const inside = props.view === 'inside', glowing = props.lamp ? lampLevel[props.atmosphere] : 0;
-  const ui = { curtains: props.curtains, lamp: props.lamp };
-  const { onAction, onHover } = props;
+  const ui = { curtains: props.curtains, lamp: props.lamp, drawers: props.drawers, sash: props.sash, music: props.music };
+  const wiring = { state: ui, onAction: props.onAction, onHover: props.onHover, onBook: props.onBook };
   useEffect(() => {
     const c = controls.current;
     if (props.view === 'inside') { wasInside.current = true; return; }
@@ -54,27 +54,28 @@ export function Room(props: RoomProps) {
     return () => clearInterval(tick);
   }, [props.reduced, invalidate]);
   const sunny = props.rain || !props.curtains ? 0 : props.atmosphere === 'day' ? .5 : props.atmosphere === 'sunset' ? .65 : 0;
-  return <>
+  return <InteractionProvider value={wiring}>
     <Lighting atmosphere={props.atmosphere} rain={props.rain} curtains={props.curtains} reduced={props.reduced} />
-    <Outside atmosphere={props.atmosphere} rain={props.rain} reduced={props.reduced} />
-    <Architecture atmosphere={props.atmosphere} glowing={glowing} />
+    <Outside atmosphere={props.atmosphere} rain={props.rain} reduced={props.reduced} meteor={props.meteor} />
+    <Architecture atmosphere={props.atmosphere} glowing={glowing} sash={props.sash} reduced={props.reduced} />
     <Floors onWalk={props.onWalk} />
-    <Interactive id="bed" state={ui} onAction={onAction} onHover={onHover}><Bed /></Interactive>
+    <Interactive id="bed"><Bed /></Interactive>
     <SleepingNook glowing={glowing} />
-    <GamingChair /><Details /><UnderLoft on={props.lamp} glowing={glowing} />
-    <Interactive id="computer" state={ui} onAction={onAction} onHover={onHover}><Desk focus={props.focus} glowing={glowing} reduced={props.reduced} /></Interactive>
-    <Interactive id="lounge" state={ui} onAction={onAction} onHover={onHover}><Lounge on={props.lamp} glowing={glowing} reduced={props.reduced} /></Interactive>
-    <Interactive id="lamp" state={ui} onAction={onAction} onHover={onHover}>
+    <GamingChair /><Details /><UnderLoft on={props.lamp} glowing={glowing} drawers={props.drawers} music={props.music} reduced={props.reduced} />
+    <Interactive id="computer"><Desk focus={props.focus} glowing={glowing} reduced={props.reduced} /></Interactive>
+    <Interactive id="lounge"><Lounge on={props.lamp} glowing={glowing} reduced={props.reduced} /></Interactive>
+    <Interactive id="lamp">
       <BedsideLamp on={props.lamp} glowing={glowing} p={home.furniture.bedsideTable}><Mug p={[-.18, .84, .12]} c="#c9d6d4" /></BedsideLamp>
       <BedsideLamp on={props.lamp} glowing={glowing} p={[home.furniture.bed[0] - home.bedSize[0] / 2 - .55, 0, home.furniture.bedsideTable[2]]}><BookStack p={[-.12, .84, .1]} tones={['#e5dcc6', clay]} /></BedsideLamp>
     </Interactive>
-    <Interactive id="books" state={ui} onAction={onAction} onHover={onHover}><Bookcase /><Bookcase lower /></Interactive>
-    <Interactive id="tea" state={ui} onAction={onAction} onHover={onHover}><TeaRoom glowing={glowing} reduced={props.reduced} /></Interactive>
-    <Interactive id="television" state={ui} onAction={onAction} onHover={onHover}><Television besideBed={props.tvBesideBed} reduced={props.reduced} /></Interactive>
-    <Interactive id="curtains" state={ui} onAction={onAction} onHover={onHover}><Curtains open={props.curtains} reduced={props.reduced} /></Interactive>
+    {/* These two wire up their own clickable parts: a shelf and a spine, a tea table and its pot. */}
+    <Bookcase /><Bookcase lower />
+    <TeaRoom glowing={glowing} reduced={props.reduced} poured={props.poured} />
+    <Interactive id="television"><Television besideBed={props.tvBesideBed} reduced={props.reduced} /></Interactive>
+    <Interactive id="curtains"><Curtains open={props.curtains} breeze={props.sash} reduced={props.reduced} /></Interactive>
     <Motes strength={sunny} reduced={props.reduced} />
     {props.rain && <Rain reduced={props.reduced} />}
     <Presence active={inside} place={props.place} placeKey={props.placeKey} walkTarget={props.walkTarget} reduced={props.reduced} veil={props.veil} onEngage={props.onEngage} onWander={props.onWander} />
     {!inside && <CameraControls ref={controls} makeDefault minPolarAngle={.35} maxPolarAngle={1.5} minAzimuthAngle={-1.1} maxAzimuthAngle={1.2} minDistance={2.2} maxDistance={45} dollySpeed={.6} truckSpeed={0} smoothTime={props.reduced ? 0 : .55} />}
-  </>;
+  </InteractionProvider>;
 }

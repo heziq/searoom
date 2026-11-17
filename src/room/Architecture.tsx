@@ -5,6 +5,7 @@ import { home, type Atmosphere } from '../config';
 import { getStairLayout } from '../layout';
 import { pines, planks, plaster, weave } from '../textures';
 import { Beam, BookStack, Box, Cloth, Cylinder, Framed, Plant, ShadowOnly, Soft, Wall, clay, lampLight, oak, oakDeep, wallColor } from './primitives';
+import { Interactive } from './interactions';
 import type { RoomProps } from './types';
 
 /** The ground floor, the stair and the loft floor: everything a visitor can stand on. Clicking it walks there. */
@@ -57,7 +58,32 @@ function Mezzanine() {
   </group>;
 }
 
-export function Curtains({ open, reduced }: { open: boolean; reduced: boolean }) {
+/** One casement in the sea window that swings out over the deck, for the air and the sound of the water. */
+function Casement({ open, reduced }: { open: boolean; reduced: boolean }) {
+  const sash = useRef<THREE.Group>(null), invalidate = useThree(s => s.invalidate);
+  const { window } = home, hinge = window.start + 3 * (window.end - window.start) / 6, bay = (window.end - window.start) / 6;
+  const head = 3.45, height = head - window.bottom - .1, middle = (window.bottom + head) / 2;
+  useEffect(() => invalidate(), [open, invalidate]);
+  useFrame((_, dt) => {
+    if (!sash.current) return;
+    const target = open ? .62 : 0;
+    sash.current.rotation.y = reduced ? target : THREE.MathUtils.damp(sash.current.rotation.y, target, 4, dt);
+    if (Math.abs(sash.current.rotation.y - target) > .002) invalidate();
+  });
+  return <group ref={sash} position={[window.x - .02, middle, hinge]}>
+    <Box p={[0, 0, .07]} s={[.14, height, .12]} c="#a77950" />
+    <Box p={[0, 0, bay - .07]} s={[.14, height, .12]} c="#a77950" />
+    <Box p={[0, height / 2 - .05, bay / 2]} s={[.14, .1, bay]} c="#a77950" />
+    <Box p={[0, -height / 2 + .05, bay / 2]} s={[.14, .1, bay]} c="#a77950" />
+    <mesh position={[0, 0, bay / 2]} rotation={[0, Math.PI / 2, 0]}>
+      <planeGeometry args={[bay - .16, height - .12]} />
+      <meshPhysicalMaterial color="#dfeaec" transparent opacity={.16} roughness={.05} metalness={0} side={THREE.DoubleSide} />
+    </mesh>
+    <Cylinder p={[-.12, 0, bay - .14]} top={.028} height={.2} c="#8a7350" rotation={[0, 0, Math.PI / 2]} />
+  </group>;
+}
+
+export function Curtains({ open, breeze, reduced }: { open: boolean; breeze: boolean; reduced: boolean }) {
   const left = useRef<THREE.Group>(null), right = useRef<THREE.Group>(null);
   const invalidate = useThree(s => s.invalidate);
   const window = home.window;
@@ -73,7 +99,11 @@ export function Curtains({ open, reduced }: { open: boolean; reduced: boolean })
       if (reduced) { ref.current.scale.x = target; ref.current.position.z = z; return; }
       ref.current.scale.x = THREE.MathUtils.damp(ref.current.scale.x, target, 5, dt);
       ref.current.position.z = THREE.MathUtils.damp(ref.current.position.z, z, 5, dt);
-      ref.current.rotation.z = Math.sin(clock.elapsedTime * .45 + i * 1.7) * .006;   // the faintest breath of air
+      // The faintest breath of air, which picks up when the casement is open.
+      const air = breeze ? .052 : .006, pace = breeze ? 1.15 : .45;
+      ref.current.rotation.z = Math.sin(clock.elapsedTime * pace + i * 1.7) * air;
+      const rest = home.window.x - .3;
+      ref.current.position.x = breeze ? rest - Math.abs(Math.sin(clock.elapsedTime * pace * .8 + i)) * .09 : THREE.MathUtils.damp(ref.current.position.x, rest, 4, dt);
       if (Math.abs(ref.current.scale.x - target) > .001 || Math.abs(ref.current.position.z - z) > .001) invalidate();
     });
   });
@@ -89,7 +119,7 @@ export function Curtains({ open, reduced }: { open: boolean; reduced: boolean })
 }
 
 /** Walls, ceiling, the sea window's frame, and the front wall that exists only for someone standing inside. */
-export function Architecture({ atmosphere, glowing }: { atmosphere: Atmosphere; glowing: number }) {
+export function Architecture({ atmosphere, glowing, sash, reduced }: { atmosphere: Atmosphere; glowing: number; sash: boolean; reduced: boolean }) {
   const { width, depth, front, height } = home.room, window = home.window;
   const rear = -depth / 2, floorDepth = front - rear, floorCenter = (front + rear) / 2;
   const roof = useRef<THREE.Group>(null), leftWall = useRef<THREE.Group>(null), frontWall = useRef<THREE.Group>(null);
@@ -142,10 +172,12 @@ export function Architecture({ atmosphere, glowing }: { atmosphere: Atmosphere; 
       <Soft p={[-1.5, 2.0, front - .08]} s={[1.72, 3.9, .09]} c="#b89068" />
       {[1.05, 2.9].map(y => <Box key={y} p={[-1.5, y, front - .13]} s={[1.24, y < 2 ? 1.3 : 1.5, .012]} c="#b0875f" />)}
       <Cylinder p={[-.84, 1.95, front - .2]} top={.045} height={.16} c="#8a7350" rotation={[Math.PI / 2, 0, 0]} />
-      <Box p={[1.3, 3.2, front - .04]} s={[2.1, .14, .05]} c={oak} />
-      {[.45, 1.0, 1.6, 2.15].map(x => <Cylinder key={x} p={[x, 3.2, front - .12]} top={.035} height={.16} c="#8a6a4b" rotation={[Math.PI / 2, 0, 0]} />)}
-      <Cloth p={[.5, 2.3, front - .2]} s={[.72, 1.75, .2]} c="#8c9c96" thread={4} /><Cloth p={[.5, 3.02, front - .2]} s={[.5, .26, .24]} c="#7f908a" thread={4} />
-      <group position={[1.62, 3.0, front - .16]} rotation={[1.25, 0, 0]}><Cylinder p={[0, 0, 0]} top={.4} height={.025} c="#d9c59a" /><Cylinder p={[0, .09, 0]} top={.17} bottom={.2} height={.17} c="#d9c59a" /><Cylinder p={[0, .03, 0]} top={.205} height={.04} c={clay} /></group>
+      <Interactive id="mirror">
+        <Box p={[1.3, 3.2, front - .04]} s={[2.1, .14, .05]} c={oak} />
+        {[.45, 1.0, 1.6, 2.15].map(x => <Cylinder key={x} p={[x, 3.2, front - .12]} top={.035} height={.16} c="#8a6a4b" rotation={[Math.PI / 2, 0, 0]} />)}
+        <Cloth p={[.5, 2.3, front - .2]} s={[.72, 1.75, .2]} c="#8c9c96" thread={4} /><Cloth p={[.5, 3.02, front - .2]} s={[.5, .26, .24]} c="#7f908a" thread={4} />
+        <group position={[1.62, 3.0, front - .16]} rotation={[1.25, 0, 0]}><Cylinder p={[0, 0, 0]} top={.4} height={.025} c="#d9c59a" /><Cylinder p={[0, .09, 0]} top={.17} bottom={.2} height={.17} c="#d9c59a" /><Cylinder p={[0, .03, 0]} top={.205} height={.04} c={clay} /></group>
+      </Interactive>
       <Soft p={[1.3, .72, front - .32]} s={[2.0, .1, .5]} c={oak} />
       {[.42, 2.18].map(x => <Box key={x} p={[x, .34, front - .32]} s={[.08, .68, .42]} c={oakDeep} />)}
       {[.95, 1.2].map((x, i) => <Soft key={x} p={[x, .08, front - .34 + i * .04]} s={[.17, .13, .44]} c="#d8cdb8" rotation={[0, i ? -.08 : .1, 0]} />)}
@@ -159,6 +191,7 @@ export function Architecture({ atmosphere, glowing }: { atmosphere: Atmosphere; 
     {Array.from({ length: 7 }, (_, i) => <Box key={i} p={[window.x, (window.bottom + window.top) / 2, window.start + i * (window.end - window.start) / 6]} s={[.2, window.top - window.bottom, i === 0 || i === 6 ? .17 : .09]} c="#a77950" />)}
     {[window.bottom, 3.45, window.top].map(y => <Box key={y} p={[window.x, y, (window.start + window.end) / 2]} s={[.2, .15, window.end - window.start + .1]} c="#a77950" />)}
     <Box p={[window.x - .18, window.bottom - .02, (window.start + window.end) / 2]} s={[.5, .12, window.end - window.start + .12]} c="#c49c70" />
+    <Interactive id="window"><Casement open={sash} reduced={reduced} /></Interactive>
     <Mezzanine />
   </group>;
 }
