@@ -1,19 +1,22 @@
 import { home, type Position } from './config.ts';
 
-// The first flight enters from the central aisle, then turns onto a landing by the left wall.
+// One straight flight climbs the left wall beside the loft's short edge, then lands on a platform in the
+// rear-left corner that is level with the loft floor. Nothing stands in the middle of the room.
 export function getStairLayout() {
-  const landingY = home.loft.position[1] + home.loft.size[1] / 2;
-  const rise = landingY / home.stairs.steps;
-  const lower = Array.from({ length: 6 }, (_, i) => ({
-    position: [-3.55 - i * .55, (i + 1) * rise - .055, .27] as Position,
-    size: [.57, .11, home.stairs.width] as Position,
+  const { stairs, loft, room } = home, { x, foot, going, width, steps } = stairs;
+  const landingY = loft.position[1] + loft.size[1] / 2;
+  const rise = landingY / steps;
+  const flight = Array.from({ length: steps - 1 }, (_, i) => ({
+    position: [x, (i + 1) * rise - .055, foot - (i + .5) * going] as Position,
+    size: [width, .11, going + .02] as Position,
   }));
-  const landing = { position: [-7.36, 7 * rise - .055, .27] as Position, size: [1.1, .11, 1.32] as Position };
-  const upper = Array.from({ length: 7 }, (_, i) => ({
-    position: [-7.42, (i + 8) * rise - .055, -.18 - i * .47] as Position,
-    size: [home.stairs.width, .11, .49] as Position,
-  }));
-  return { landingY, rise, lower, landing, upper, treads: [...lower, landing, ...upper] };
+  /** Where the flight ends and the platform begins. */
+  const top = foot - (steps - 1) * going;
+  const rearFace = -room.depth / 2 + .1;
+  const landing = { position: [x, loft.position[1], (top + rearFace) / 2] as Position, size: [width, loft.size[1], top - rearFace] as Position };
+  /** Height of the line through the tread tops at a given z, for rails and stringers. */
+  const heightAt = (z: number) => ((foot - z) / going + .5) * rise;
+  return { landingY, rise, flight, landing, top, heightAt, treads: [...flight, landing] };
 }
 
 export function getLibraryBooks(spec: Pick<typeof home.library, 'width' | 'bays' | 'shelves'> = home.library) {

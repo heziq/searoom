@@ -7,11 +7,15 @@ type Disc = [x: number, z: number, radius: number];
 
 const BODY = .36;   // clearance kept from walls and furniture
 const STEP = .6;    // tallest change of level one stride may take
-const { room, loft, furniture: f, bedSize, worktable, lowerLibrary, sleepingNook } = home;
+const { room, loft, furniture: f, bedSize, worktable, lowerLibrary, sleepingNook, stairs, dresser } = home;
 const rear = -room.depth / 2;
 export const loftFloor = loft.position[1] + loft.size[1] / 2;
-const loftFront = loft.position[2] + loft.size[2] / 2, loftRight = loft.position[0] + loft.size[0] / 2;
-const rise = loftFloor / home.stairs.steps, landingY = rise * 7;
+const loftFront = loft.position[2] + loft.size[2] / 2, loftRight = loft.position[0] + loft.size[0] / 2, loftLeft = loft.position[0] - loft.size[0] / 2;
+const rise = loftFloor / stairs.steps;
+/** Where the flight ends and the corner platform begins. */
+const flightTop = stairs.foot - (stairs.steps - 1) * stairs.going;
+/** How far a visitor may stray from the stair's centre line: there is a wall on one side and a rail on the other. */
+const LANE = stairs.width / 2 - .3;
 
 const around = ([x, , z]: number[], w: number, d: number): Rect => [x - w / 2, x + w / 2, z - d / 2, z + d / 2];
 const ground: { rects: Rect[]; discs: Disc[] } = {
@@ -20,8 +24,10 @@ const ground: { rects: Rect[]; discs: Disc[] } = {
     [sleepingNook.left - .08, sleepingNook.right, rear, rear + 1.4],                       // bedside tables and the plant behind them
     [sleepingNook.left - .08, sleepingNook.left + .08, rear, rear + sleepingNook.depth - .4], // timber screen
     around(f.desk, worktable.size[0], worktable.size[2]),
-    [f.lowerShelf[0] - .3, f.lowerShelf[0] + .2, f.lowerShelf[2] - lowerLibrary.width / 2, f.lowerShelf[2] + lowerLibrary.width / 2],
-    [-3.55, -.85, rear, -5.42],                                                             // console under the loft
+    [f.lowerShelf[0] - .25, f.lowerShelf[0] + .2, f.lowerShelf[2] - lowerLibrary.width / 2, f.lowerShelf[2] + lowerLibrary.width / 2],
+    [f.console[0] - 1.35, f.console[0] + 1.35, rear, -5.42],                                // console under the loft
+    [f.dresser[0] - dresser.size[0] / 2, f.dresser[0] + dresser.size[0] / 2, rear, f.dresser[2] + dresser.size[2] / 2],
+    [stairs.x - stairs.width / 2, stairs.x + stairs.width / 2, rear, stairs.foot - stairs.going], // under and beside the stair
     around(f.loungeShelf, .5, 2.7),
     [.25, 2.35, 4.55, room.front],                                                          // entry bench
   ],
@@ -32,11 +38,12 @@ const upstairs: { rects: Rect[]; discs: Disc[] } = {
   discs: [[-3.6, -3.1, .36], [-2, -4.32, .36], [-7.65, -5.75, .3], [-.6, -5.55, .3], [-.62, -4.7, .45]],
 };
 
-/** Height of the stair under a point, or null away from the stair. The two flights are treated as ramps. */
+/** Height of the stair under a point, or null away from the stair. The flight is treated as a ramp. */
 export function stairHeight(x: number, z: number): number | null {
-  if (x <= -3 && x > -6.81 && z > -.33 && z < .84) return Math.min(landingY, rise + (-3.55 - x) * rise / .55);
-  if (x <= -6.81 && x >= -7.98 && z > -.42 && z < .93) return landingY;
-  if (x <= -6.86 && x >= -7.98 && z <= -.42 && z >= -3.3) return Math.min(loftFloor, landingY + (-.42 - z) * (loftFloor - landingY) / 2.58);
+  const off = x - stairs.x;
+  if (Math.abs(off) < LANE && z <= stairs.foot && z > flightTop) return Math.min(loftFloor, rise + (stairs.foot - z) * rise / stairs.going);
+  // The corner platform, and the step across from it onto the loft.
+  if (off > -LANE && x < loftLeft + BODY + .05 && z <= flightTop && z > flightTop - .85) return loftFloor;
   return null;
 }
 const blocked = ({ rects, discs }: typeof ground, x: number, z: number) =>
@@ -109,14 +116,12 @@ function across(from: Point, to: Point, level: number): Point[] {
   return path;
 }
 
-const stairFoot = { x: -2.7, z: .27 }, stairTurn = { x: -7.42, z: .27 }, stairTop = { x: -7.42, z: -3.45 };
+const stairFoot = { x: stairs.x, z: stairs.foot + .45 }, stairTop = { x: stairs.x, z: flightTop - .45 };
 /** Waypoints from here to there; changing level always goes by the stair. */
 export function route(from: Foot, to: Foot): Point[] {
   const goingUp = to.y > loftFloor / 2, isUp = from.y > loftFloor - .3, onStair = from.y > .15 && !isUp, level = goingUp ? loftFloor : 0;
   if (!onStair && goingUp === isUp) return across(from, to, level);
-  const stair = onStair
-    ? from.y < landingY - .02 ? (goingUp ? [stairTurn, stairTop] : [stairFoot]) : (goingUp ? [stairTop] : [stairTurn, stairFoot])
-    : goingUp ? [stairFoot, stairTurn, stairTop] : [stairTop, stairTurn, stairFoot];
+  const stair = onStair ? [goingUp ? stairTop : stairFoot] : goingUp ? [stairFoot, stairTop] : [stairTop, stairFoot];
   const approach = onStair ? [] : across(from, stair[0], isUp ? loftFloor : 0).slice(0, -1);
   return [...approach, ...stair, ...across(stair[stair.length - 1], to, level)];
 }

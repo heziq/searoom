@@ -34,19 +34,24 @@ test('the double bed head meets the real rear wall with space beside both sides'
   assert.ok(bed[2]+bedSize[2]/2 < room.front-1);
 });
 
-test('stairs enter from the central aisle and turn on a level landing, clear of the gaming chair', () => {
-  const {lower, landing, upper, treads, rise, landingY} = getStairLayout();
-  const {desk, gamingChair} = home.furniture;
-  assert.equal(treads.length, home.stairs.steps);
-  assert.equal(lower.length,6);
-  assert.equal(upper.length,7);
-  assert.ok(lower[0].position[0] > desk[0]+home.worktable.size[0]/2);
-  assert.ok(lower[0].position[0]-(desk[0]+home.worktable.size[0]/2) > .7);
-  assert.ok(Math.abs(lower.at(-1)!.position[1]+rise-landing.position[1]) < .001);
-  assert.ok(Math.abs(upper[0].position[1]-rise-landing.position[1]) < .001);
-  assert.ok(upper.every(t=>t.position[2]+t.size[2]/2 < gamingChair[2]-.5));
-  assert.ok(upper.at(-1)!.position[2] < home.loft.position[2]+home.loft.size[2]/2);
-  assert.ok(Math.abs(upper.at(-1)!.position[1]+.055-landingY)<.001);
+test('one straight flight climbs the left wall beside the loft short edge, leaving the middle of the room open', () => {
+  const {flight, landing, treads, rise, landingY} = getStairLayout();
+  const {room, loft, stairs, furniture: {gamingChair, teaTable}} = home;
+  const loftLeft = loft.position[0]-loft.size[0]/2, loftFront = loft.position[2]+loft.size[2]/2, rear = -room.depth/2;
+  assert.equal(treads.length, stairs.steps);
+  assert.ok(loft.size[2] < loft.size[0]);                                   // the left edge is the loft's short edge
+  for (const t of treads) {
+    assert.ok(t.position[0]-t.size[0]/2 >= -room.width/2+.1-.001);         // against the left wall
+    assert.ok(t.position[0]+t.size[0]/2 <= loftLeft+.001);                 // never over the loft or the aisle
+  }
+  for (let i = 1; i < flight.length; i++) {
+    assert.ok(Math.abs(flight[i].position[1]-flight[i-1].position[1]-rise) < .001);
+    assert.ok(flight[i].position[2] < flight[i-1].position[2]);              // climbing toward the rear wall
+  }
+  assert.ok(Math.abs(landing.position[1]+landing.size[1]/2-landingY) < .001); // the landing is level with the loft
+  assert.ok(landing.position[2]-landing.size[2]/2 >= rear && landing.position[2]+landing.size[2]/2 <= loftFront);
+  assert.ok(flight.every(t => t.position[2]+t.size[2]/2 < gamingChair[2]-1.5));
+  assert.ok(teaTable[0]-1.05-loftLeft > 2);                                  // the tea table has its own floor
 });
 
 test('the chair backs toward the solid left wall and shelves hold varied books on both levels', () => {
@@ -80,8 +85,8 @@ test('lighting and external links retain usable configuration', () => {
 });
 
 test('the desk and its chair stand clear of the stair', () => {
-  const {desk} = home.furniture, {lower} = getStairLayout();
-  const stairEdge = Math.max(...lower.map(t => t.position[2] + t.size[2]/2));
+  const {desk} = home.furniture, {flight} = getStairLayout();
+  const stairEdge = Math.max(...flight.map(t => t.position[2] + t.size[2]/2));
   assert.ok(desk[2] - home.worktable.size[2]/2 > stairEdge + .05);
 });
 
@@ -110,13 +115,27 @@ test('a visitor can walk the room and climb to the tea loft, but not through the
   assert.equal(floorAt(teaTable[0], teaTable[2], loftFloor), null);
   assert.equal(floorAt(-4, -4, 0), 0);                                  // under the loft is ordinary floor
   assert.equal(floorAt(-4, -1, loftFloor), null);                       // no stepping off the loft edge
-  assert.equal(floorAt(-5, .3, 0), null);                               // nor through the side of the stair
-  assert.ok(stairHeight(-5, .3)! > 0 && stairHeight(-7.4, -2)! < loftFloor);
+  assert.equal(floorAt(-5, .3, 0), 0);                                  // the aisle in front of the loft is open floor
+  assert.equal(floorAt(-8.6, -2, 0), null);                             // no walking under or through the stair
+  assert.ok(stairHeight(-8.6, 0)! > 0 && stairHeight(-8.6, -3)! < loftFloor);
+  const {dresser} = home.furniture;
+  assert.equal(floorAt(dresser[0], dresser[2], 0), null);               // nor through the dresser
+  assert.equal(floorAt(dresser[0], dresser[2] + 1.2, 0), 0);            // but you can stand in front of it
   const blockedSpot = follow(start, {x: bed[0], y: 0, z: bed[2]});      // a click on the bed leads to its edge
   assert.ok(floorAt(blockedSpot.x, blockedSpot.z, 0) === 0 && Math.hypot(blockedSpot.x - bed[0], blockedSpot.z - bed[2]) < 3.2);
   let foot = start;                                                     // walking into the front wall just stops
   for (let i = 0; i < 100; i++) foot = walk(foot, 0, .1);
   assert.ok(foot.z < home.room.front);
+});
+
+test('the dresser stands against the rear wall under the right end of the loft, beside the console', () => {
+  const {loft, room, dresser: {size}, furniture: {dresser, console: consoleTable}} = home;
+  const loftLeft = loft.position[0]-loft.size[0]/2, loftRight = loft.position[0]+loft.size[0]/2;
+  assert.ok(dresser[0]-size[0]/2 > loft.position[0] && dresser[0]+size[0]/2 <= loftRight); // the right half of the loft
+  assert.ok(dresser[0]-size[0]/2 > loftLeft);
+  assert.ok(size[1] < loft.position[1]-loft.size[1]/2-1.5);                // room above it for the mirror
+  assert.ok(Math.abs(dresser[2]-size[2]/2-(-room.depth/2+.1)) < .1);       // its back to the wall
+  assert.ok(dresser[0]-size[0]/2 > consoleTable[0]+1.35+.5);               // clear of the console
 });
 
 test('every place to settle is inside the room, with somewhere to stand up', () => {

@@ -9,11 +9,15 @@ export const home = {
   room: { width: 18.5, depth: 12.5, front: 5.15, height: 7.55, eye: 2.5 },
   window: { x: 9.25, start: -5.95, end: 4.85, bottom: .27, top: 7.16 },
   loft: { position: [-4.025, 3.55, -4.28] as Position, size: [8.05, .26, 3.9] as Position },
-  loftSupports: [-7.9, -5.2],
-  stairs: { width: 1.08, steps: 14, railHeight: .86, landing: [-7.43, 1.84, .25] as Position },
+  loftSupports: [-5.2],
+  // One straight flight on the left wall, in the strip beside the loft's short edge. `foot` is where the first
+  // tread starts (z), `going` the depth of each tread; the flight climbs toward the rear wall and lands on a
+  // platform in the rear-left corner, level with the loft.
+  stairs: { width: 1.08, steps: 14, railHeight: .86, x: -8.6, foot: .7, going: .38 },
   worktable: { size: [2.35, .24, 3.9] as Position, topY: 1.07 },
   library: { width: 7.85, height: 3.08, depth: .42, bays: 7, shelves: [.48, 1.1, 1.74, 2.38] },
   lowerLibrary: { width: 3.95, height: 2.85, depth: .38, bays: 4, shelves: [.45, 1.05, 1.66, 2.25] },
+  dresser: { size: [2, 1.5, .66] as Position },
   bedSize: [3.65, .35, 4.5] as Position,
   // A lowered linen canopy and an open timber screen shelter the bed head; the foot stays in the sun.
   sleepingNook: { left: 2.2, right: 8.05, depth: 2.95, canopyY: 3.5 },
@@ -28,7 +32,11 @@ export const home = {
     ottoman: [8.05, 0, 1.75] as Position,
     loungeShelf: [5.15, 0, 2.3] as Position,
     shelf: [-4.1, 3.68, -5.75] as Position,
-    lowerShelf: [-8.87, 0, -3.74] as Position,
+    // The lower bookcase backs onto the stair under the loft's left edge and faces the room.
+    lowerShelf: [-7.72, 0, -4.12] as Position,
+    // Along the rear wall under the loft: the console on the left, the dresser on the bed side.
+    console: [-4.85, 0, -5.72] as Position,
+    dresser: [-1.55, 0, -5.76] as Position,
     teaTable: [-3.6, 3.68, -4.5] as Position,
     plant: [8.5, 0, -5.6] as Position,
   },

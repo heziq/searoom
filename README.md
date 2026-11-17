@@ -26,8 +26,8 @@ Four places invite you to settle: the desk chair, the bed, the deep chair by the
 An 18.5 × 12.5 rectangular loft has a compact tea-room mezzanine attached to the rear wall. A tall timber-framed window fills the right side and looks over a weathered deck, a strip of shore and the sea, out to a headland with a small lighthouse. Daylight enters from that side only, so it falls across the oak floor in long window-shaped pools and leaves the rest of the room in soft shade.
 
 - **Left front:** deep gaming desk with two monitors, keyboard, mouse mat, blue-lit PC tower, a mug, a notebook and a small lamp. The chair backs toward the solid left wall; from it you look over the screens to the sea.
-- **Left rear:** a lower bookcase and an L-shaped stair. The first flight begins off the central passage, reaches a landing, then turns along the left wall.
-- **Under the loft:** a low console with a lamp and three prints.
+- **Left wall:** one straight stair climbing toward the rear wall beside the loft's short edge, ending on a corner landing level with the loft. Under the loft's left edge, a lower bookcase backs onto the stair and faces the room. The aisle in front of the loft stays open.
+- **Under the loft:** a low console with a lamp and three prints, and on the bed side a six-drawer oak dresser with a leaning round mirror, a folded sweater, a dish for keys and dried grass in a jar.
 - **Right rear:** a generous double bed against the solid wall, in its own alcove: oak panelling, a soft grey-green wall above it, a lowered linen canopy on a timber frame, and an open timber screen on the room side. The head is sheltered; the foot stays in the sun and the sea side stays open.
 - **Right front:** a deep chair facing the sea window with a footstool, side table and arc lamp on a round rug, its back guarded by a low bookshelf. The rolling television parks in the corner beside it.
 - **Mezzanine:** a Chinese-inspired solid-wood tea table on a woven mat under a paper lantern, with simple chairs, teaware, floor cushions, a long back-wall bookcase, plants, chart and sailboat.

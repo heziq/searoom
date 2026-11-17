@@ -250,7 +250,7 @@ function Floors({ onWalk }: Pick<RoomProps, 'onWalk'>) {
     <mesh position={[0, .012, floorCenter]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[width, floorDepth]} /><meshStandardMaterial map={planks('ground', 36, tones)} roughness={.66} /></mesh>
     <Soft p={home.loft.position} s={home.loft.size} c="#a77c55" />
     <mesh position={[x, y + thickness / 2 + .012, z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[loftWidth - .04, loftDepth - .04]} /><meshStandardMaterial map={planks('loft', 18, tones, 1024, 512)} roughness={.7} /></mesh>
-    {stairs.treads.map((t, i) => <Soft key={i} p={t.position} s={t.size} c={i === 6 ? '#b98d5f' : '#c9a075'} />)}
+    {stairs.treads.map((t, i) => <Soft key={i} p={t.position} s={t.size} c={i === stairs.treads.length - 1 ? '#a77c55' : '#c9a075'} />)}
     <mesh ref={marker} visible={false} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}><ringGeometry args={[.2, .26, 40]} /><meshBasicMaterial color="#fffaf0" transparent opacity={.7} depthWrite={false} toneMapped={false} /></mesh>
   </group>;
 }
@@ -259,21 +259,28 @@ function Mezzanine() {
   const { position, size } = home.loft;
   const [x, y, z] = position, [width, thickness, depth] = size;
   const floor = y + thickness / 2, front = z + depth / 2, right = x + width / 2, left = x - width / 2;
-  const stairs = getStairLayout(), rail = floor + home.stairs.railHeight;
+  const stairs = getStairLayout(), { foot, railHeight, width: stairWidth } = home.stairs, rail = floor + railHeight;
+  const edge = home.stairs.x + stairWidth / 2;   // the open side of the flight; the other side is the wall
+  const corner = left + .03;
   return <group>
     <Box p={[x, y - .22, front]} s={[width, .3, .22]} c="#916c4c" />
     {home.loftSupports.map(px => <Box key={px} p={[px, (y - thickness / 2) / 2, front - .14]} s={[.16, y - thickness / 2, .16]} c="#8a6749" />)}
     {[-7.6, -4.2, -.8].filter(px => px < right).map(px => <Box key={px} p={[px, y - .22, z]} s={[.11, .21, depth]} c="#8d6b4a" />)}
-    <Beam from={[left, rail, front]} to={[-7.76, rail, front]} width={.075} color="#9a7350" />
-    <Beam from={[-6.45, rail, front]} to={[right, rail, front]} width={.075} color="#9a7350" />
-    {Array.from({ length: 18 }, (_, i) => { const px = left + i * width / 17; return px > -7.76 && px < -6.45 ? null : <Beam key={i} from={[px, floor, front]} to={[px, rail, front]} width={.033} color="#6f6050" />; })}
+    {/* The stair arrives at the side, so the rail runs unbroken along the loft front. */}
+    <Beam from={[left, rail, front]} to={[right, rail, front]} width={.075} color="#9a7350" />
+    {Array.from({ length: 18 }, (_, i) => { const px = left + i * width / 17; return <Beam key={i} from={[px, floor, front]} to={[px, rail, front]} width={.033} color="#6f6050" />; })}
     <Beam from={[right, rail, z - depth / 2]} to={[right, rail, front]} width={.075} color="#9a7350" />
     {Array.from({ length: 5 }, (_, i) => <Beam key={i} from={[right, floor, z - depth / 2 + i * depth / 4]} to={[right, rail, z - depth / 2 + i * depth / 4]} width={.033} color="#6f6050" />)}
-    <Beam from={[-3.4, 1.07, .86]} to={[-7.42, 2.68, .86]} width={.07} color="#8b6a4c" />
-    {stairs.lower.filter((_, i) => i % 2 === 0).map((t, i) => <Beam key={i} from={[t.position[0], t.position[1] + .06, .82]} to={[t.position[0], t.position[1] + .86, .82]} width={.037} color="#695e52" />)}
-    <Beam from={[-6.84, 2.68, .86]} to={[-6.84, rail, -3.2]} width={.07} color="#8b6a4c" />
-    {stairs.upper.filter((_, i) => i % 2 === 0).map((t, i) => <Beam key={i} from={[-6.84, t.position[1] + .06, t.position[2]]} to={[-6.84, t.position[1] + .86, t.position[2]]} width={.037} color="#695e52" />)}
-    <Box p={[-7.92, stairs.landing.position[1] / 2, .91]} s={[.09, stairs.landing.position[1], .09]} c="#876849" />
+    {/* Along the loft's short edge, beside the flight, as far as the landing. */}
+    <Beam from={[corner, rail, front]} to={[corner, rail, stairs.top]} width={.075} color="#9a7350" />
+    {Array.from({ length: 5 }, (_, i) => { const pz = front + (stairs.top - front) * i / 4; return <Beam key={i} from={[corner, floor, pz]} to={[corner, rail, pz]} width={.033} color="#6f6050" />; })}
+    {/* Stringers under both sides of the flight. */}
+    {[edge - .03, home.stairs.x - stairWidth / 2 + .03].map(sx => <Beam key={sx} from={[sx, .02, foot + .12]} to={[sx, stairs.heightAt(stairs.top) - .14, stairs.top]} width={.07} depth={.3} color="#8b6a4c" />)}
+    {/* Handrail on the open side, from a newel at the foot to the post that also carries the loft's corner. */}
+    <Beam from={[edge, stairs.heightAt(foot) + railHeight, foot]} to={[edge, stairs.heightAt(front) + railHeight, front]} width={.07} color="#8b6a4c" />
+    {stairs.flight.filter(t => t.position[2] > front + .1).filter((_, i) => i % 2 === 1).map((t, i) => <Beam key={i} from={[edge, t.position[1] + .06, t.position[2]]} to={[edge, stairs.heightAt(t.position[2]) + railHeight, t.position[2]]} width={.037} color="#695e52" />)}
+    <Box p={[edge, (stairs.heightAt(foot) + railHeight + .1) / 2, foot]} s={[.09, stairs.heightAt(foot) + railHeight + .1, .09]} c="#876849" />
+    <Box p={[-8.02, rail / 2, front]} s={[.1, rail, .1]} c="#876849" />
   </group>;
 }
 
@@ -510,7 +517,7 @@ function Details({ on, glowing }: { on: boolean; glowing: number }) {
     <Rug name="desk" p={[desk[0] - .8, .03, desk[2]]} s={[3.65, 4.3]} style={{ ground: '#93adb8', line: 'rgba(236,229,214,.5)', border: '#dfe5e2' }} />
     <Rug name="entry" p={[-1.5, .03, 3.5]} s={[1.5, 2.8]} style={{ ground: '#ddd3c0', line: 'rgba(185,116,88,.5)', border: '#b9a58a' }} />
     <Rug name="lounge" round p={[readingChair[0] + .05, .03, readingChair[2]]} s={[2.1, 2.1]} style={{ ground: '#cdb994', line: '', border: 'rgba(120,92,60,.5)' }} />
-    <group position={[-2, 0, 0]}>
+    <group position={[home.furniture.console[0] + .2, 0, 0]}>
       <Soft p={[-.2, .54, -5.72]} s={[2.65, 1.03, .53]} c="#aa825b" />
       {[-.8, 0, .8].map(x => <group key={x}><Box p={[x - .2, .54, -5.445]} s={[.8, .82, .02]} c="#bb946b" /><Box p={[x, .56, -5.43]} s={[.03, .17, .016]} c="#7d6249" /></group>)}
       <Ceramic p={[-1.2, 1.06, -5.68]} />
@@ -526,10 +533,37 @@ function Details({ on, glowing }: { on: boolean; glowing: number }) {
     {/* Slippers by the bed. */}
     {[0, 1].map(i => <Soft key={i} p={[7.42 + i * .22, .07, -2.75 + i * .05]} s={[.17, .09, .42]} c="#cdbfa8" rotation={[0, .12 - i * .2, 0]} />)}
     <Grounding p={[bed[0], .045, bed[2] + .1]} s={[5.3, 6.1]} /><Grounding p={[desk[0], .045, desk[2]]} s={[3.6, 5.2]} o={.5} /><Grounding p={[gamingChair[0], .046, gamingChair[2]]} s={[1.8, 1.8]} />
-    <Grounding p={[-2.2, .02, -5.6]} s={[3.6, 1.7]} /><Grounding p={[readingChair[0], .046, readingChair[2]]} s={[2.5, 2.5]} /><Grounding p={[ottoman[0], .046, ottoman[2]]} s={[1.5, 1.5]} />
+    <Grounding p={[home.furniture.console[0], .02, -5.6]} s={[3.6, 1.7]} /><Grounding p={[readingChair[0], .046, readingChair[2]]} s={[2.5, 2.5]} /><Grounding p={[ottoman[0], .046, ottoman[2]]} s={[1.5, 1.5]} />
     <Grounding p={[loungeShelf[0], .02, loungeShelf[2]]} s={[1.3, 3.5]} /><Grounding p={[8.2, .046, -5.05]} s={[1.3, 1.3]} /><Grounding p={[.48, .02, -5.38]} s={[1.1, 1.1]} />
-    <Grounding p={[-8.75, .02, -3.74]} s={[1.3, 4.6]} o={.5} />
+    <Grounding p={[home.furniture.lowerShelf[0], .02, home.furniture.lowerShelf[2]]} s={[1.1, 4.6]} o={.5} />
   </>;
+}
+/** A six-drawer oak dresser under the right end of the loft, with a leaning mirror and the day's small things on top. */
+function Dresser() {
+  const [w, h, d] = home.dresser.size, front = d / 2, top = h + .03;
+  return <group position={home.furniture.dresser}>
+    {[-1, 1].flatMap(sx => [-1, 1].map(sz => <Box key={`${sx}${sz}`} p={[sx * (w / 2 - .08), .05, sz * (d / 2 - .07)]} s={[.08, .1, .08]} c={oakDeep} />))}
+    <Soft p={[0, .1 + (h - .13) / 2, 0]} s={[w, h - .13, d]} c="#a77c55" />
+    <Soft p={[0, h, .01]} s={[w + .06, .06, d + .04]} c="#b68c61" />
+    {[-.48, .48].flatMap(cx => [.33, .76, 1.19].map(cy => <group key={`${cx}${cy}`}>
+      <Soft p={[cx, cy, front + .005]} s={[.9, .38, .03]} c="#bb946b" />
+      <Cylinder p={[cx, cy, front + .04]} top={.026} height={.04} c="#8a7350" rotation={[Math.PI / 2, 0, 0]} />
+    </group>))}
+    {/* A round mirror leans against the wall. */}
+    <group position={[-.38, top + .44, -d / 2 + .1]} rotation={[-.12, 0, 0]}>
+      <mesh castShadow><torusGeometry args={[.42, .035, 10, 48]} /><meshStandardMaterial color="#9c7754" roughness={.6} /></mesh>
+      <mesh position={[0, 0, -.005]}><circleGeometry args={[.41, 48]} /><meshStandardMaterial color="#dfe7e8" roughness={.12} metalness={.35} /></mesh>
+    </group>
+    {/* A folded sweater, a trinket box, a dish for rings and keys, dried grass in a jar. */}
+    <Cloth p={[.32, top + .06, .06]} s={[.56, .12, .4]} c={seaBlue} thread={4} />
+    <Soft p={[-.82, top + .05, .12]} s={[.24, .1, .17]} c={oakDeep} />
+    <Cylinder p={[-.08, top + .012, .2]} top={.11} bottom={.08} height={.024} c="#d8d3c0" />
+    <group position={[.78, top, -.12]}>
+      <Cylinder p={[0, .1, 0]} top={.07} bottom={.06} height={.2} c="#c9d6d4" />
+      {[-.4, -.15, .1, .35].map((lean, i) => <Beam key={i} from={[0, .15, 0]} to={[Math.sin(lean) * .3, .62 + (i % 2) * .1, Math.cos(lean * 2) * .05]} width={.008} color="#c8b48a" />)}
+    </group>
+    <Grounding p={[0, .045, .05]} s={[w + .7, d + .8]} o={.5} />
+  </group>;
 }
 /** Dust turning in the shaft of light from the sea window. */
 function Motes({ strength, reduced }: { strength: number; reduced: boolean }) {
@@ -629,7 +663,7 @@ export function Room(props: RoomProps) {
     <Floors onWalk={props.onWalk} />
     <Interactive action="bed" label="Rest on the bed" {...props}><Bed /></Interactive>
     <SleepingNook glowing={glowing} />
-    <GamingChair /><Details on={props.lamp} glowing={glowing} />
+    <GamingChair /><Details on={props.lamp} glowing={glowing} /><Dresser />
     <Interactive action="computer" label="Sit down at the computer" {...props}><Desk focus={props.focus} glowing={glowing} reduced={props.reduced} /></Interactive>
     <Interactive action="lounge" label="Sink into the chair by the sea window" {...props}><Lounge on={props.lamp} glowing={glowing} reduced={props.reduced} /></Interactive>
     <Interactive action="lamp" label={props.lamp ? 'Turn off the lamps' : 'Turn on the lamps'} {...props}>
