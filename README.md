@@ -39,7 +39,13 @@ Day, sunset, night, and rain are at the top right. Every lamp in the house answe
 
 Edit `src/config.ts` for room and furniture positions, dimensions, the places to sit (`places`), light colors and sun positions, personal website URL, and book links. The website URL currently points to `https://example.com`; replace it before publishing.
 
-- `src/Room.tsx` — geometry, materials and lighting, in named components.
+- `src/Room.tsx` — the composition root: it puts the pieces below together and hands the camera between inside and the outside views.
+- `src/room/interactions.tsx` — every clickable thing in one list, with its labels and what it does. The scene and the toolbar both read it, so a new interaction is added in one place.
+- `src/room/primitives.tsx` — the palette and the small parts everything is built from (boxes, cloth, beams, lamps, plants).
+- `src/room/Architecture.tsx` — walls, ceiling, floors, the stair and loft structure, the sea window and its curtains.
+- `src/room/Bedroom.tsx`, `Workspace.tsx`, `Lounge.tsx`, `Library.tsx`, `TeaRoom.tsx`, `UnderLoft.tsx` — one corner of the room each.
+- `src/room/Details.tsx` — rugs, plants and the small traces of someone living here.
+- `src/room/Lighting.tsx` — daylight, lamps, dust and rain.
 - `src/Outside.tsx` — sky, sea, shore and lighthouse beyond the window.
 - `src/Presence.tsx` — the first-person camera: looking, walking, sitting.
 - `src/walk.ts` — where a visitor can stand and how they get there (pure, covered by tests).
